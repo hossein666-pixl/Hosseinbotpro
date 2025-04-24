@@ -1,45 +1,38 @@
-import os
 import logging
-import openai
+import asyncio
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-# لاگ‌ها برای دیباگ
-logging.basicConfig(level=logging.INFO)
+# تنظیمات لاگ
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# توکن‌ها (مستقیم وارد شده؛ برای امنیت بهتر از env استفاده کن)
-TELEGRAM_TOKEN = "7156009984:AAFqU7EIjCE47ZYYETn1VXcrwNCVZQdHZsM"
-OPENAI_API_KEY = "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"
-
-# تنظیم کلید OpenAI
-openai.api_key = OPENAI_API_KEY
-
-# استارت
+# دستور برای شروع
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام! من دستیار هوشمند تو هستم. هر چی خواستی بپرس یا بگو تا انجامش بدم.")
+    await update.message.reply_text('سلام! من ربات شما هستم.')
 
-# دریافت پیام و پاسخ با ChatGPT
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_text = update.message.text
-    try:
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": user_text}]
-        )
-        response = completion.choices[0].message.content.strip()
-        await update.message.reply_text(response)
-    except Exception as e:
-        await update.message.reply_text(f"مشکلی پیش اومد: {e}")
+# دستور برای کمک
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('برای کمک، لطفا دستور را وارد کنید.')
 
-# اجرای برنامه
+# دستور برای اطلاعات
+async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('این ربات برای انجام کارهای مختلف طراحی شده است.')
+
+# اصلی
 async def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    # توکن ربات
+    app = Application.builder().token("7156009984:AAFqU7EIjCE47ZYYETn1VXcrwNCVZQdHZsM").build()
 
+    # اضافه کردن دستورات
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("info", info))
 
+    # شروع دریافت پیام‌ها
     await app.run_polling()
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+# اجرای برنامه بدون استفاده از asyncio.run()
+if __name__ == '__main__':
+    asyncio.get_event_loop().run_until_complete(main())
